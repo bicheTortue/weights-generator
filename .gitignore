@@ -2,3 +2,4 @@ pd
 plt
 torch
 __pycache__
+test*
