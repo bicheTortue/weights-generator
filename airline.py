@@ -77,7 +77,7 @@ model.add(
         input_shape=(1, look_back),
         kernel_constraint=min_max_norm(-1, 1),
         recurrent_constraint=min_max_norm(-1, 1),
-        bias_constraint=min_max_norm(-1.1),
+        bias_constraint=min_max_norm(-1, 1),
     )
 )
 model.add(Dense(1))
