@@ -134,9 +134,11 @@ def main():
         )
 
     w1 = getLSTMWeights(model.lstm, 1, 4)
-    np.savetxt("test.out", w1)
     w2 = getLinearWeights(model.linear1, 2)
     w3 = getLinearWeights(model.linear2, 1)
+    np.savetxt("test1.out", w1)
+    np.savetxt("test2.out", w2)
+    np.savetxt("test3.out", w3)
 
     with torch.no_grad():
         # shift train predictions for plotting
