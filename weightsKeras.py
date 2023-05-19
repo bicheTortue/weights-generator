@@ -4,10 +4,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+
+# import tensorflow as tf
+
 from tensorflow import keras
 
-# from tensorflow.keras import layers
+from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
@@ -16,11 +18,8 @@ from tensorflow.keras.layers import Activation  # Generate 2 sets of X variables
 # LSTMs have unique 3-dimensional input requirements
 
 df = pd.read_csv("airline.csv")
-df2 = np.array(df["Number Passenger"])
-absi = np.array(df["Month"])
+df2 = np.array(df["Passengers"])
 X = df2[:-1]
-print(X.shape)
-exit()
 X = X.reshape((143, 1))
 Y = df2[1:]
 Y = Y.reshape((143, 1))
