@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -45,8 +46,8 @@ class AirModel2(nn.Module):
 def create_dataset(dataset, lookback):
     X, y = [], []
     for i in range(len(dataset) - lookback):
-        feature = dataset[i : i + lookback]
-        target = dataset[i + 1 : i + lookback + 1]
+        feature = dataset[i : i + lookback, 0]
+        target = dataset[i + lookback, 0]
         X.append(feature)
         y.append(target)
     return torch.tensor(X), torch.tensor(y)
@@ -87,32 +88,46 @@ def getLinearWeights(nn, nbOutput):
 
 
 def main():
+    lookback = 2
     df = pd.read_csv("airline.csv")
-    timeseries = df[["Passengers"]].values.astype("float32")
+    ds = df[["Passengers"]].values.astype("float32")
 
-    # plt.plot(timeseries)
-    # plt.show()
+    # Scaling
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    ds = scaler.fit_transform(ds)
+    X = np.zeros((ds.shape[0] - lookback + 1, lookback))  # X is used for the pred
+
+    for i in range(len(X)):
+        X[i][0] = ds[i][0]
+        for j in range(1, lookback):
+            X[i][j] = ds[i + j]
 
     # train-test split for time series
-    train_size = int(len(timeseries) * 0.67)
-    test_size = len(timeseries) - train_size
-    train, test = timeseries[:train_size], timeseries[train_size:]
+    train_size = int(len(ds) * 0.67)
+    test_size = len(ds) - train_size
+    train, test = ds[:train_size, :], ds[train_size:, :]
 
-    lookback = 1
-    X_train, y_train = create_dataset(train, lookback=lookback)
-    X_test, y_test = create_dataset(test, lookback=lookback)
-    print(X_train.shape, y_train.shape)
-    print(X_test.shape, y_test.shape)
+    trainX, trainY = create_dataset(train, lookback=lookback)
+    testX, testY = create_dataset(test, lookback=lookback)
+    print(trainX.shape, trainY.shape)
+    print(testX.shape, testY.shape)
+
+    # reshape input to be [samples, time steps, features]
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
+    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    print(trainX.shape, trainY.shape)
+    print(testX.shape, testY.shape)
 
     model = AirModel2(1, 4)
     # model = model.to(device)
     optimizer = optim.Adam(model.parameters())
     loss_fn = nn.MSELoss()
     loader = data.DataLoader(
-        data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8
+        data.TensorDataset(trainX, trainY), shuffle=True, batch_size=1
     )
 
-    n_epochs = 300
+    n_epochs = 30
     for epoch in range(n_epochs):
         model.train()
         for X_batch, y_batch in loader:
@@ -126,10 +141,10 @@ def main():
             continue
         model.eval()
         with torch.no_grad():
-            y_pred = model(X_train)
-            train_rmse = torch.sqrt(loss_fn(y_pred, y_train))
-            y_pred = model(X_test)
-            test_rmse = torch.sqrt(loss_fn(y_pred, y_test))
+            y_pred = model(trainX)
+            train_rmse = torch.sqrt(loss_fn(y_pred, trainY))
+            y_pred = model(testX)
+            test_rmse = torch.sqrt(loss_fn(y_pred, testY))
         print(
             "Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse)
         )
@@ -143,15 +158,15 @@ def main():
 
     with torch.no_grad():
         # shift train predictions for plotting
-        train_plot = np.ones_like(timeseries) * np.nan
-        y_pred = model(X_train)
+        train_plot = np.ones_like(ds) * np.nan
+        y_pred = model(trainX)
         y_pred = y_pred[:, -1, :]
-        train_plot[lookback:train_size] = model(X_train)[:, -1, :]
+        train_plot[lookback:train_size] = model(trainX)[:, -1, :]
         # shift test predictions for plotting
-        test_plot = np.ones_like(timeseries) * np.nan
-        test_plot[train_size + lookback : len(timeseries)] = model(X_test)[:, -1, :]
+        test_plot = np.ones_like(ds) * np.nan
+        test_plot[train_size + lookback : len(ds)] = model(testX)[:, -1, :]
     # plot
-    plt.plot(timeseries, c="b")
+    plt.plot(ds, c="b")
     plt.plot(train_plot, c="r")
     plt.plot(test_plot, c="g")
     plt.show()
