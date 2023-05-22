@@ -90,8 +90,8 @@ predict = scaler.inverse_transform(predict)
 
 # Separate the train and test
 trainPredict, testPredict = (
-    predict[0 : train_size - lookback, :],
-    predict[train_size - lookback : len(predict), :],
+    predict[0 : train_size + 1, :],
+    predict[train_size : len(predict), :],
 )
 
 # calculate root mean squared error
@@ -121,19 +121,20 @@ indexes = np.array([i for i in range(predict.shape[0])], dtype=float).reshape(-1
 # plt.show()
 
 
-# print(len(trainPredict), len(testPredict), len(predict), len(ds), trainY.shape)
+print(len(trainPredict), len(testPredict), len(predict), len(ds), trainY.shape)
 
 # shift train predictions for plotting
 trainPredictPlot = np.empty((ds.shape[0] + 1, ds.shape[1]))
 trainPredictPlot[:, :] = np.nan
-trainPredictPlot[lookback - 1 : len(trainPredict) + lookback - 1, :] = trainPredict
+trainPredictPlot[lookback : len(trainPredict) + lookback, :] = trainPredict
 # shift test predictions for plotting
-testPredictPlot = np.empty_like(ds)
+testPredictPlot = np.empty((ds.shape[0] + 1, ds.shape[1]))
 testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict) + lookback - 1 : len(ds), :] = testPredict
+testPredictPlot[len(trainPredict) + 1 : len(ds) + 1, :] = testPredict
 
 plt.plot(scaler.inverse_transform(ds), label="entire dataset")
 plt.plot(trainPredictPlot, label="trainPredict")
 plt.plot(testPredictPlot, label="testPredict")
+plt.plot(predict)
 plt.legend(loc="best")
 plt.show()

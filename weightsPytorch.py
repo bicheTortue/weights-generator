@@ -30,15 +30,15 @@ class AirModel2(nn.Module):
     def __init__(self, nbInput, nbHidden):
         super().__init__()
         self.lstm = nn.LSTM(input_size=nbInput, hidden_size=nbHidden, batch_first=True)
-        self.linear1 = nn.Linear(nbHidden, 2)
-        self.linear2 = nn.Linear(2, 1)
+        self.linear1 = nn.Linear(nbHidden, 1)
+        # self.linear2 = nn.Linear(2, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x, _ = self.lstm(x)
         # x = x[:, -1, :]
         x = self.linear1(x)
-        x = self.linear2(x)
+        # x = self.linear2(x)
         # x = self.sigmoid(x)
         return x
 
@@ -109,15 +109,15 @@ def main():
 
     trainX, trainY = create_dataset(train, lookback=lookback)
     testX, testY = create_dataset(test, lookback=lookback)
-    print(trainX.shape, trainY.shape)
-    print(testX.shape, testY.shape)
+    X, _ = create_dataset(ds, lookback)
+    # X = torch.tensor(X, dtype=torch.float64)
+    print(X.shape, trainX.shape)
 
     # reshape input to be [samples, time steps, features]
     trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
-    print(trainX.shape, trainY.shape)
-    print(testX.shape, testY.shape)
+    print(X.shape, trainY.shape)
 
     model = AirModel2(1, 4)
     # model = model.to(device)
@@ -150,25 +150,29 @@ def main():
         )
 
     w1 = getLSTMWeights(model.lstm, 1, 4)
-    w2 = getLinearWeights(model.linear1, 2)
-    w3 = getLinearWeights(model.linear2, 1)
+    w2 = getLinearWeights(model.linear1, 1)
+    # w3 = getLinearWeights(model.linear2, 1)
     np.savetxt("test1.out", w1)
     np.savetxt("test2.out", w2)
-    np.savetxt("test3.out", w3)
+    # np.savetxt("test3.out", w3)
 
     with torch.no_grad():
         # shift train predictions for plotting
-        train_plot = np.ones_like(ds) * np.nan
-        y_pred = model(trainX)
+        train_plot = np.ones((ds.shape[0] + 1, ds.shape[1])) * np.nan
+        y_pred = model(X)
         y_pred = y_pred[:, -1, :]
+        # train_plot[lookback : train_size + lookback] = y_pred[:train_size, :]
         train_plot[lookback:train_size] = model(trainX)[:, -1, :]
         # shift test predictions for plotting
         test_plot = np.ones_like(ds) * np.nan
         test_plot[train_size + lookback : len(ds)] = model(testX)[:, -1, :]
     # plot
+    for _ in range(lookback):
+        y_pred = np.insert(y_pred, 0, None)
     plt.plot(ds, c="b")
     plt.plot(train_plot, c="r")
     plt.plot(test_plot, c="g")
+    plt.plot(y_pred, c="g")
     plt.show()
 
 
