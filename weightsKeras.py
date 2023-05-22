@@ -10,6 +10,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 # import norm
 from keras.constraints import min_max_norm
@@ -86,32 +88,49 @@ testPredict = model.predict(testX)
 predict = model.predict(X)
 predict = scaler.inverse_transform(predict)
 
-# invert predictions
-trainPredict = scaler.inverse_transform(trainPredict)
-trainY = scaler.inverse_transform([trainY])
-testPredict = scaler.inverse_transform(testPredict)
-testY = scaler.inverse_transform([testY])
-# calculate root mean squared error
-trainScore = np.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
-print("Train Score: %.2f RMSE" % (trainScore))
-testScore = np.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
-print("Test Score: %.2f RMSE" % (testScore))
-
-
+# Separate the train and test
 trainPredict, testPredict = (
     predict[0 : train_size - lookback, :],
     predict[train_size - lookback : len(predict), :],
 )
+
+# calculate root mean squared error
+# trainScore = np.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
+# print("Train Score: %.2f RMSE" % (trainScore))
+# testScore = np.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
+# print("Test Score: %.2f RMSE" % (testScore))
+
+indexes = np.array([i for i in range(predict.shape[0])], dtype=float).reshape(-1, 1)
+
+# points = np.array([indexes, predict], dtype=float).reshape(-1, 1, 2)
+# segments = np.concatenate([points[:-1], points[1:]], axis=1)
+# for _ in range(lookback):
+#   predict = np.insert(predict, 0, None)
+#   indexes = np.insert(indexes, 0, float("nan"))
+
+# fig, axs = plt.subplots(1, 1, sharex=True, sharey=True)
+
+# cmap = ListedColormap(["r", "g"])
+# norm = BoundaryNorm([0, len(trainPredict), len(predict)], cmap.N)
+# lc = LineCollection(segments, cmap=cmap, norm=norm)
+# lc.set_array(indexes)
+# lc.set_linewidth(2)
+#
+# line = axs.add_collection(lc)
+# fig.colorbar(line, ax=axs)
+# plt.show()
+
+
 # print(len(trainPredict), len(testPredict), len(predict), len(ds), trainY.shape)
 
 # shift train predictions for plotting
-trainPredictPlot = np.empty_like(ds)
+trainPredictPlot = np.empty((ds.shape[0] + 1, ds.shape[1]))
 trainPredictPlot[:, :] = np.nan
 trainPredictPlot[lookback - 1 : len(trainPredict) + lookback - 1, :] = trainPredict
 # shift test predictions for plotting
 testPredictPlot = np.empty_like(ds)
 testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict) + lookback - 2 : len(ds) - 1, :] = testPredict
+testPredictPlot[len(trainPredict) + lookback - 1 : len(ds), :] = testPredict
 
 plt.plot(scaler.inverse_transform(ds), label="entire dataset")
 plt.plot(trainPredictPlot, label="trainPredict")
