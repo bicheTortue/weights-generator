@@ -149,12 +149,8 @@ def main():
             "Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse)
         )
 
-    w1 = getLSTMWeights(model.lstm, 1, 4)
-    w2 = getLinearWeights(model.linear1, 1)
-    # w3 = getLinearWeights(model.linear2, 1)
-    np.savetxt("test1.out", w1)
-    np.savetxt("test2.out", w2)
-    # np.savetxt("test3.out", w3)
+    np.savetxt("lstm.wei", getLSTMWeights(model.lstm, 1, 4))
+    np.savetxt("dense.wei", getLinearWeights(model.linear1, 1))
 
     with torch.no_grad():
         # shift train predictions for plotting
@@ -162,17 +158,19 @@ def main():
         y_pred = model(X)
         y_pred = y_pred[:, -1, :]
         # train_plot[lookback : train_size + lookback] = y_pred[:train_size, :]
-        train_plot[lookback:train_size] = model(trainX)[:, -1, :]
+        # train_plot[lookback : train_size + lookback + 1] = model(trainX)[:, -1, :]
+        train_plot[lookback : train_size + lookback + 1] = y_pred[0 : train_size + 1, :]
         # shift test predictions for plotting
         test_plot = np.ones_like(ds) * np.nan
-        test_plot[train_size + lookback : len(ds)] = model(testX)[:, -1, :]
+        # test_plot[train_size + lookback : len(ds)] = model(testX)[:, -1, :]
+        test_plot[train_size + lookback : len(ds)] = y_pred[train_size:, :]
     # plot
     for _ in range(lookback):
         y_pred = np.insert(y_pred, 0, None)
     plt.plot(ds, c="b")
     plt.plot(train_plot, c="r")
     plt.plot(test_plot, c="g")
-    plt.plot(y_pred, c="g")
+    # plt.plot(y_pred, c="g")
     plt.show()
 
 
