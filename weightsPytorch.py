@@ -63,8 +63,6 @@ def getLSTMWeights(lstm, nbInput, nbHidden):
     weights[2] = weights[2] + weights[3]
     weights.pop()
 
-    print(weights)
-    print("=============\n")
     for i in range(nbGates):
         out[i] = []
         for j in range(nbHidden):
@@ -111,13 +109,11 @@ def main():
     testX, testY = create_dataset(test, lookback=lookback)
     X, _ = create_dataset(ds, lookback)
     # X = torch.tensor(X, dtype=torch.float64)
-    print(X.shape, trainX.shape)
 
     # reshape input to be [samples, time steps, features]
     trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
-    print(X.shape, trainY.shape)
 
     model = AirModel2(1, 4)
     # model = model.to(device)
