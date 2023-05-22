@@ -38,13 +38,6 @@ ds = df[["Passengers"]].values.astype("float32")
 # normalize the ds
 scaler = MinMaxScaler(feature_range=(0, 1))
 ds = scaler.fit_transform(ds)
-X = np.zeros((ds.shape[0] - lookback + 1, lookback))
-
-for i in range(len(X)):
-    X[i][0] = ds[i][0]
-    for j in range(1, lookback):
-        X[i][j] = ds[i + j]
-        # X[i] = np.append(ds[i], ds[i + 1 : i + lookback][0], 0)
 
 # split into train and test sets
 train_size = int(len(ds) * 0.67)
@@ -54,6 +47,7 @@ train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
 # reshape into X=t and Y=t+1
 trainX, trainY = create_dataset(train, lookback)
 testX, testY = create_dataset(test, lookback)
+X, _ = create_dataset(ds, lookback)
 
 
 # reshape input to be [samples, time steps, features]
@@ -83,8 +77,6 @@ print("Accurracy: {}".format(scores[1]))
 
 
 # make predictions
-trainPredict = model.predict(trainX)
-testPredict = model.predict(testX)
 predict = model.predict(X)
 predict = scaler.inverse_transform(predict)
 
@@ -100,41 +92,17 @@ trainPredict, testPredict = (
 # testScore = np.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
 # print("Test Score: %.2f RMSE" % (testScore))
 
-indexes = np.array([i for i in range(predict.shape[0])], dtype=float).reshape(-1, 1)
-
-# points = np.array([indexes, predict], dtype=float).reshape(-1, 1, 2)
-# segments = np.concatenate([points[:-1], points[1:]], axis=1)
-# for _ in range(lookback):
-#   predict = np.insert(predict, 0, None)
-#   indexes = np.insert(indexes, 0, float("nan"))
-
-# fig, axs = plt.subplots(1, 1, sharex=True, sharey=True)
-
-# cmap = ListedColormap(["r", "g"])
-# norm = BoundaryNorm([0, len(trainPredict), len(predict)], cmap.N)
-# lc = LineCollection(segments, cmap=cmap, norm=norm)
-# lc.set_array(indexes)
-# lc.set_linewidth(2)
-#
-# line = axs.add_collection(lc)
-# fig.colorbar(line, ax=axs)
-# plt.show()
-
-
-print(len(trainPredict), len(testPredict), len(predict), len(ds), trainY.shape)
+# print(len(trainPredict), len(testPredict), len(predict), len(ds), trainY.shape)
 
 # shift train predictions for plotting
-trainPredictPlot = np.empty((ds.shape[0] + 1, ds.shape[1]))
-trainPredictPlot[:, :] = np.nan
+trainPredictPlot = np.ones_like(ds) * np.nan
 trainPredictPlot[lookback : len(trainPredict) + lookback, :] = trainPredict
 # shift test predictions for plotting
-testPredictPlot = np.empty((ds.shape[0] + 1, ds.shape[1]))
-testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict) + 1 : len(ds) + 1, :] = testPredict
+testPredictPlot = np.ones_like(ds) * np.nan
+testPredictPlot[len(trainPredict) + 1 : len(ds), :] = testPredict
 
 plt.plot(scaler.inverse_transform(ds), label="entire dataset")
 plt.plot(trainPredictPlot, label="trainPredict")
 plt.plot(testPredictPlot, label="testPredict")
-plt.plot(predict)
 plt.legend(loc="best")
 plt.show()
