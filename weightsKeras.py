@@ -39,6 +39,8 @@ ds = df[["Passengers"]].values.astype("float32")
 scaler = MinMaxScaler(feature_range=(0, 1))
 ds = scaler.fit_transform(ds)
 
+print(ds)
+exit()
 # split into train and test sets
 train_size = int(len(ds) * 0.67)
 test_size = len(ds) - train_size
