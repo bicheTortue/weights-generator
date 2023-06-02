@@ -130,6 +130,8 @@ def main():
             y_pred = model(X_batch)
             loss = loss_fn(y_pred, y_batch)
             optimizer.zero_grad()
+            for p in model.parameters():
+                p.data.clamp_(-1.0, 1.0)
             loss.backward()
             optimizer.step()
         # Validation
