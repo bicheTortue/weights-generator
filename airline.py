@@ -121,7 +121,7 @@ weights_trainable = model.layers[0].trainable_weights
 # print("\nTrainable weights:")
 # print(weights_trainable)
 
-units = int(int(model.layers[0].trainable_weights[0].shape[1]) / 4)
+units = int(model.layers[0].trainable_weights[0].shape[1]) // 4
 print("\nNo units: ", units)
 
 ## Each tensor contains weights for four LSTM units (in this order): i (input), f (forget), c (cell state) and o (output)
