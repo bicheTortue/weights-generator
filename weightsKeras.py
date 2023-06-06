@@ -48,11 +48,11 @@ def getLSTMWeights(lstm, nbInput, nbHidden):
 
 
 def getLinearWeights(nn, nbOutput):
-    W = list(nn.get_weights()[0])
+    W = nn.get_weights()[0]
     b = list(nn.get_weights()[1])
     out = []
     for i in range(nbOutput):
-        out.extend(W[i])
+        out.extend(W[:, i])
         out.append(b[i])
     return out
 
