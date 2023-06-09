@@ -105,6 +105,8 @@ def main():
 
     # make predictions
     predict = model.predict(X)
+    df = pd.DataFrame(predict)
+    df.to_csv("predict.csv")
     predict = scaler.inverse_transform(predict)
 
     # Separate the train and test

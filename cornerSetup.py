@@ -39,5 +39,8 @@ for i, x in enumerate(X):
         print("<var>in0step" + str(j))  # nb inputs will have to change here (the zero)
         print("<value>" + str(val / 10) + "</value>")
         print("</var>")
+    print("<var>r")  # nb inputs will have to change here (the zero)
+    print("<value>" + str(i) + "</value>")
+    print("</var>")
     print("</vars>")
     print("</corner>")
