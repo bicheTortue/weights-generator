@@ -12,7 +12,7 @@ lookback = 2
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
+        feature = ds[i: i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
@@ -36,10 +36,11 @@ for i, x in enumerate(X):
     print("<corner enabled='1'>test" + str(i))
     print("<vars>")
     for j, val in enumerate(x):
-        print("<var>in0step" + str(j))  # nb inputs will have to change here (the zero)
-        print("<value>" + str(val / 10) + "</value>")
+        # nb inputs will have to change here (the zero)
+        print("<var>in0step" + str(j))
+        print("<value>" + str(float('%.2g' % val / 10)) + "</value>")
         print("</var>")
-    print("<var>r")  # nb inputs will have to change here (the zero)
+    print("<var>step")
     print("<value>" + str(i) + "</value>")
     print("</var>")
     print("</vars>")
