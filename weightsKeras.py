@@ -16,6 +16,21 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 # import norm
 from keras.constraints import min_max_norm
 
+from keras import backend as K
+from tensorflow.keras.layers.core import Activation
+from tensorflow.keras.utils.generic_utils import get_custom_objects
+
+# Note! You cannot use random python functions, activation function gets as an input tensorflow tensors and should return tensors. There are a lot of helper functions in keras backend.
+
+
+def custom_activation(x):
+    return (1/(1 + K.exp(-x)))
+
+
+get_custom_objects().update(
+    {'custom_activation': Activation(custom_activation)})
+
+
 # Global vars
 lookback = 2
 
@@ -23,7 +38,7 @@ lookback = 2
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
+        feature = ds[i: i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
@@ -71,7 +86,7 @@ def main():
     # split into train and test sets
     train_size = int(len(ds) * 0.67)
     test_size = len(ds) - train_size
-    train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
+    train, test = ds[0:train_size, :], ds[train_size: len(ds), :]
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train, lookback)
@@ -99,7 +114,8 @@ def main():
 
     print(model.summary())
     model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
-    model.fit(trainX, trainY, epochs=30, batch_size=1, validation_split=0.35, verbose=1)
+    model.fit(trainX, trainY, epochs=30, batch_size=1,
+              validation_split=0.35, verbose=1)
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
 
@@ -111,8 +127,8 @@ def main():
 
     # Separate the train and test
     trainPredict, testPredict = (
-        predict[0 : train_size + 1, :],
-        predict[train_size : len(predict), :],
+        predict[0: train_size + 1, :],
+        predict[train_size: len(predict), :],
     )
 
     # calculate root mean squared error
@@ -125,10 +141,10 @@ def main():
 
     # shift train predictions for plotting
     trainPredictPlot = np.ones_like(ds) * np.nan
-    trainPredictPlot[lookback : len(trainPredict) + lookback, :] = trainPredict
+    trainPredictPlot[lookback: len(trainPredict) + lookback, :] = trainPredict
     # shift test predictions for plotting
     testPredictPlot = np.ones_like(ds) * np.nan
-    testPredictPlot[len(trainPredict) + 1 : len(ds), :] = testPredict
+    testPredictPlot[len(trainPredict) + 1: len(ds), :] = testPredict
 
     plt.plot(scaler.inverse_transform(ds), label="entire dataset")
     plt.plot(trainPredictPlot, label="trainPredict")
