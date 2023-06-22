@@ -6,6 +6,7 @@ import pandas as pd
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
@@ -14,7 +15,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
 # import norm
-from keras.constraints import min_max_norm
+from tensorflow.keras.constraints import MinMaxNorm
 
 from keras import backend as K
 from tensorflow.keras.layers import Activation
@@ -24,17 +25,61 @@ from tensorflow.keras.layers import Activation
 # Note! You cannot use random python functions, activation function gets as an input tensorflow tensors and should return tensors. There are a lot of helper functions in keras backend.
 
 
+class cTanh(Layer):
+    def __init__(self, beta, **kwargs):
+        super(cTanh, self).__init__(**kwargs)
+        self.beta = K.cast_to_floatx(beta)
+
+    def call(self, inputs):
+        # return K.tanh(self.beta * inputs)
+        return K.sigmoid(self.beta * inputs) * 2 - 1
+
+    def get_config(self):
+        config = {"beta": float(self.beta)}
+        base_config = super(cTanh, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
+class cSigm(Layer):
+    def __init__(self, beta, **kwargs):
+        super(cSigm, self).__init__(**kwargs)
+        self.beta = K.cast_to_floatx(beta)
+
+    def call(self, inputs):
+        return K.sigmoid(self.beta * inputs)
+
+    def get_config(self):
+        config = {"beta": float(self.beta)}
+        base_config = super(cSigm, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
 # c is for custom
+@tf.function
 def cSigmoid(x):
     l = np.loadtxt(
         "sigmoid.csv", delimiter=",", dtype=np.float32
     )  # Value need to be transformed
+    out = []
+    print(x)
+    print(x[None, 1, 0])
+    for i in x:
+        print(i)
+        for j in i:
+            print(j)
     for i in range(len(l) - 1):
-        if tf.math.greater(l[i + 1, 0], x):  # x<l[i+1,0]
+        # if K.cast(K.greater(l[i + 1, 0], x)):
+        if x[0][0] < l[i + 1, 0]:
             a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
             b = l[i, 1] - a * l[i, 0]
-            return x * a + b
-    return l[-1, 1]
+            out.append(x * a + b)
+    return K.constant(out)
 
     # return 1 / (1 + K.exp(-x))
 
@@ -44,6 +89,9 @@ def cSigmoid(x):
 
 # Global vars
 lookback = 2
+nbInput = 1
+nbHidden = 15
+nbOutput = 1
 
 
 def create_dataset(ds, lookback=1):
@@ -105,34 +153,39 @@ def main():
     X, _ = create_dataset(ds, lookback)
 
     # reshape input to be [samples, time steps, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
-    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], nbInput))
+    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], nbInput))
+    X = np.reshape(X, (X.shape[0], X.shape[1], nbInput))
 
     # create and fit the LSTM network
     model = Sequential()
     model.add(
         LSTM(
-            4,
-            input_shape=(lookback, 1),
-            kernel_constraint=min_max_norm(-1, 1),
-            recurrent_constraint=min_max_norm(-1, 1),
-            bias_constraint=min_max_norm(-1, 1),
-            recurrent_activation=Activation(cSigmoid),
+            nbHidden,
+            input_shape=(lookback, nbInput),
+            kernel_constraint=MinMaxNorm(-1, 1),
+            recurrent_constraint=MinMaxNorm(-1, 1),
+            bias_constraint=MinMaxNorm(-1, 1),
+            # recurrent_activation=Activation(cSigmoid),
+            recurrent_activation=cSigm(0.67),
+            activation=cTanh(0.67),
         )
     )
     # model.add(Dense(2, kernel_initializer="normal", activation="linear"))
-    model.add(Dense(1, kernel_initializer="normal", activation="linear"))
+    model.add(Dense(nbOutput, kernel_initializer="normal", activation="linear"))
 
     print(model.summary())
     model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
-    model.fit(trainX, trainY, epochs=30, batch_size=1, validation_split=0.35, verbose=1)
+    model.fit(
+        trainX, trainY, epochs=150, batch_size=1, validation_split=0.35, verbose=1
+    )
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
 
     # make predictions
     predict = model.predict(X)
     df = pd.DataFrame(predict)
+    df.columns = ["digital"]
     df.to_csv("predict.csv")
     predict = scaler.inverse_transform(predict)
 
@@ -162,8 +215,8 @@ def main():
     plt.plot(testPredictPlot, label="testPredict")
     plt.legend(loc="best")
     plt.show()
-    np.savetxt("lstm.wei", getLSTMWeights(model.layers[0], 1, 4))
-    np.savetxt("dense.wei", getLinearWeights(model.layers[1], 1))
+    np.savetxt("lstm.wei", getLSTMWeights(model.layers[0], nbInput, nbHidden))
+    np.savetxt("dense.wei", getLinearWeights(model.layers[1], nbOutput))
 
 
 if __name__ == "__main__":
