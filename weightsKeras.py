@@ -92,6 +92,7 @@ lookback = 2
 nbInput = 1
 nbHidden = 15
 nbOutput = 1
+epochs = 150
 
 
 def create_dataset(ds, lookback=1):
@@ -177,7 +178,7 @@ def main():
     print(model.summary())
     model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
     model.fit(
-        trainX, trainY, epochs=150, batch_size=1, validation_split=0.35, verbose=1
+        trainX, trainY, epochs=epochs, batch_size=1, validation_split=0.35, verbose=1
     )
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
