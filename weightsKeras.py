@@ -60,32 +60,23 @@ class cSigm(Layer):
         return input_shape
 
 
-# c is for custom
-@tf.function
-def cSigmoid(x):
-    l = np.loadtxt(
-        "sigmoid.csv", delimiter=",", dtype=np.float32
-    )  # Value need to be transformed
-    out = []
-    print(x)
-    print(x[None, 1, 0])
-    for i in x:
-        print(i)
-        for j in i:
-            print(j)
-    for i in range(len(l) - 1):
-        # if K.cast(K.greater(l[i + 1, 0], x)):
-        if x[0][0] < l[i + 1, 0]:
-            a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
-            b = l[i, 1] - a * l[i, 0]
-            out.append(x * a + b)
-    return K.constant(out)
+# Value need to be transformed
+l = np.loadtxt("sigmoid.csv", delimiter=",", dtype=np.float32)
 
-    # return 1 / (1 + K.exp(-x))
+case = [(tf.less(x, l[0, 0]), lambda: 0)]
+for i in range(len(l)-1):
+    cond = tf.less(x, l[i+1, 0])
+    a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
+    b = l[i, 1] - a * l[i, 0]
+    case.append((cond, lambda: a*x+b))
 
+
+def one(): return 1
+
+
+cSigmoid = tf.case(case, default=one)
 
 # get_custom_objects().update({'custom_activation': Activation(custom_activation)})
-
 
 # Global vars
 lookback = 2
@@ -98,7 +89,7 @@ epochs = 150
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
+        feature = ds[i: i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
@@ -146,7 +137,7 @@ def main():
     # split into train and test sets
     train_size = int(len(ds) * 0.67)
     test_size = len(ds) - train_size
-    train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
+    train, test = ds[0:train_size, :], ds[train_size: len(ds), :]
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train, lookback)
@@ -167,8 +158,8 @@ def main():
             kernel_constraint=MinMaxNorm(-1, 1),
             recurrent_constraint=MinMaxNorm(-1, 1),
             bias_constraint=MinMaxNorm(-1, 1),
-            # recurrent_activation=Activation(cSigmoid),
-            recurrent_activation=cSigm(0.67),
+            recurrent_activation=Activation(cSigmoid),
+            # recurrent_activation=cSigm(0.67),
             activation=cTanh(0.67),
         )
     )
@@ -192,8 +183,8 @@ def main():
 
     # Separate the train and test
     trainPredict, testPredict = (
-        predict[0 : train_size + 1, :],
-        predict[train_size : len(predict), :],
+        predict[0: train_size + 1, :],
+        predict[train_size: len(predict), :],
     )
 
     # calculate root mean squared error
@@ -206,10 +197,10 @@ def main():
 
     # shift train predictions for plotting
     trainPredictPlot = np.ones_like(ds) * np.nan
-    trainPredictPlot[lookback : len(trainPredict) + lookback, :] = trainPredict
+    trainPredictPlot[lookback: len(trainPredict) + lookback, :] = trainPredict
     # shift test predictions for plotting
     testPredictPlot = np.ones_like(ds) * np.nan
-    testPredictPlot[len(trainPredict) + 1 : len(ds), :] = testPredict
+    testPredictPlot[len(trainPredict) + 1: len(ds), :] = testPredict
 
     plt.plot(scaler.inverse_transform(ds), label="entire dataset")
     plt.plot(trainPredictPlot, label="trainPredict")
