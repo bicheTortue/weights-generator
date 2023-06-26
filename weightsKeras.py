@@ -25,7 +25,7 @@ from tensorflow.keras.layers import Activation
 # Note! You cannot use random python functions, activation function gets as an input tensorflow tensors and should return tensors. There are a lot of helper functions in keras backend.
 
 
-class cTanh(Layer):
+class bTanh(Layer):
     def __init__(self, beta, **kwargs):
         super(cTanh, self).__init__(**kwargs)
         self.beta = K.cast_to_floatx(beta)
@@ -43,7 +43,7 @@ class cTanh(Layer):
         return input_shape
 
 
-class cSigm(Layer):
+class bSigm(Layer):
     def __init__(self, beta, **kwargs):
         super(cSigm, self).__init__(**kwargs)
         self.beta = K.cast_to_floatx(beta)
@@ -60,36 +60,99 @@ class cSigm(Layer):
         return input_shape
 
 
-# Value need to be transformed
-l = np.loadtxt("sigmoid.csv", delimiter=",", dtype=np.float32)
+class cSigmoid(Layer):
+    def __init__(self, **kwargs):
+        super(cSigmoid, self).__init__(**kwargs)
 
-case = [(tf.less(x, l[0, 0]), lambda: 0)]
-for i in range(len(l)-1):
-    cond = tf.less(x, l[i+1, 0])
-    a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
-    b = l[i, 1] - a * l[i, 0]
-    case.append((cond, lambda: a*x+b))
+    def call(self, inputs):
+        l = np.loadtxt("sigmoid.csv", delimiter=",", dtype=np.float32)
+        l[:, 0] = l[:, 0] * 10
+        l[:, 1] = (l[:, 1] - 0.9) * 10
+
+        # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
+
+        f = tf.constant(0.0)
+        for i in range(len(l) - 1):
+            cond = tf.cast(
+                tf.math.logical_and(
+                    tf.math.greater_equal(inputs, l[i, 0]),
+                    tf.math.less(inputs, l[i + 1, 0]),
+                ),
+                tf.float32,
+            )
+            # cond = tf.less(inputs, l[i + 1, 0])
+            a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
+            b = l[i, 1] - a * l[i, 0]
+            f += tf.math.multiply(cond, a * inputs + b)
+
+        cond = tf.cast(tf.math.greater_equal(inputs, l[i, 0]), tf.float32)
+        f += tf.math.multiply(cond, tf.constant(1.0))
+
+        return f
+
+    def get_config(self):
+        config = {"beta": float(self.beta)}
+        base_config = super(cSigmoid, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
 
 
-def one(): return 1
+class cTanh(Layer):
+    def __init__(self, **kwargs):
+        super(cTanh, self).__init__(**kwargs)
 
+    def call(self, inputs):
+        l = np.loadtxt("tanh.csv", delimiter=",", dtype=np.float32)
+        l[:, 0] = l[:, 0] * 10
+        l[:, 1] = (l[:, 1] - 0.9) * 10
 
-cSigmoid = tf.case(case, default=one)
+        # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
 
-# get_custom_objects().update({'custom_activation': Activation(custom_activation)})
+        f = tf.constant(0.0)
+        cond = tf.cast(tf.math.less(inputs, l[0, 0]), tf.float32)
+        f += tf.math.multiply(cond, tf.constant(-1.0))
+
+        for i in range(len(l) - 1):
+            cond = tf.cast(
+                tf.math.logical_and(
+                    tf.math.greater_equal(inputs, l[i, 0]),
+                    tf.math.less(inputs, l[i + 1, 0]),
+                ),
+                tf.float32,
+            )
+            # cond = tf.less(inputs, l[i + 1, 0])
+            a = (l[i + 1, 1] - l[i, 1]) / (l[i + 1, 0] - l[i, 0])
+            b = l[i, 1] - a * l[i, 0]
+            f += tf.math.multiply(cond, a * inputs + b)
+
+        cond = tf.cast(tf.math.greater_equal(inputs, l[i, 0]), tf.float32)
+        f += tf.math.multiply(cond, tf.constant(1.0))
+
+        return f
+
+    def get_config(self):
+        config = {"beta": float(self.beta)}
+        base_config = super(cTanh, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
 
 # Global vars
 lookback = 2
 nbInput = 1
-nbHidden = 15
+nbHidden = 4
 nbOutput = 1
-epochs = 150
+epochs = 300
 
 
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i: i + lookback, 0]
+        feature = ds[i : i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
@@ -137,7 +200,7 @@ def main():
     # split into train and test sets
     train_size = int(len(ds) * 0.67)
     test_size = len(ds) - train_size
-    train, test = ds[0:train_size, :], ds[train_size: len(ds), :]
+    train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train, lookback)
@@ -158,9 +221,10 @@ def main():
             kernel_constraint=MinMaxNorm(-1, 1),
             recurrent_constraint=MinMaxNorm(-1, 1),
             bias_constraint=MinMaxNorm(-1, 1),
-            recurrent_activation=Activation(cSigmoid),
+            recurrent_activation=cSigmoid(),
+            # recurrent_activation=Activation(cSigmoid),
             # recurrent_activation=cSigm(0.67),
-            activation=cTanh(0.67),
+            activation=cTanh(),
         )
     )
     # model.add(Dense(2, kernel_initializer="normal", activation="linear"))
@@ -183,8 +247,8 @@ def main():
 
     # Separate the train and test
     trainPredict, testPredict = (
-        predict[0: train_size + 1, :],
-        predict[train_size: len(predict), :],
+        predict[0 : train_size + 1, :],
+        predict[train_size : len(predict), :],
     )
 
     # calculate root mean squared error
@@ -197,10 +261,10 @@ def main():
 
     # shift train predictions for plotting
     trainPredictPlot = np.ones_like(ds) * np.nan
-    trainPredictPlot[lookback: len(trainPredict) + lookback, :] = trainPredict
+    trainPredictPlot[lookback : len(trainPredict) + lookback, :] = trainPredict
     # shift test predictions for plotting
     testPredictPlot = np.ones_like(ds) * np.nan
-    testPredictPlot[len(trainPredict) + 1: len(ds), :] = testPredict
+    testPredictPlot[len(trainPredict) + 1 : len(ds), :] = testPredict
 
     plt.plot(scaler.inverse_transform(ds), label="entire dataset")
     plt.plot(trainPredictPlot, label="trainPredict")
