@@ -38,7 +38,9 @@ for i, x in enumerate(X):
     for j, val in enumerate(x):
         # nb inputs will have to change here (the zero)
         print("<var>in0step" + str(j))
-        print("<value>" + str(float('%.2g' % val / 10)) + "</value>")
+        tmpVal = val/10
+        tmpVal = float("%.2g" % tmpVal)
+        print("<value>" + str(tmpVal) + "</value>")
         print("</var>")
     print("<var>step")
     print("<value>" + str(i) + "</value>")
