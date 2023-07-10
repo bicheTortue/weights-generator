@@ -66,7 +66,7 @@ class cSigmoid(Layer):
 
     def call(self, inputs):
         l = np.loadtxt("sigmoid.csv", delimiter=",", dtype=np.float32)
-        l[:, 0] = l[:, 0] * 10
+        l[:, 0] = (l[:, 0] - 0.9) * 10
         l[:, 1] = (l[:, 1] - 0.9) * 10
 
         # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
@@ -105,7 +105,7 @@ class cTanh(Layer):
 
     def call(self, inputs):
         l = np.loadtxt("tanh.csv", delimiter=",", dtype=np.float32)
-        l[:, 0] = l[:, 0] * 10
+        l[:, 0] = (l[:, 0] - 0.9) * 10
         l[:, 1] = (l[:, 1] - 0.9) * 10
 
         # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
