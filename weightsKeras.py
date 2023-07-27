@@ -222,8 +222,6 @@ def main():
             recurrent_constraint=MinMaxNorm(-1, 1),
             bias_constraint=MinMaxNorm(-1, 1),
             recurrent_activation=cSigmoid(),
-            # recurrent_activation=Activation(cSigmoid),
-            # recurrent_activation=cSigm(0.67),
             activation=cTanh(),
         )
     )
