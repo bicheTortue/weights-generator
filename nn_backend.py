@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
@@ -132,7 +133,7 @@ def saveTofile(layers, filename):
             out.append(getLinearWeights(layer, nbOut))
         elif type(layer) == LSTM:
             nbHid = layer.units
-            nbIn = layer.input_shape[1]
+            nbIn = layer.input_shape[-1]
             out[0].append("LSTM(" + str(nbHid) + ")")
             out.append(getLSTMWeights(layer, nbIn, nbHid))
 

@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import pickle
-
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
@@ -25,7 +23,7 @@ lookback = 2
 nbInput = 1
 nbHidden = 4
 nbOutput = 1
-epochs = 300
+epochs = 3
 
 
 def main():
