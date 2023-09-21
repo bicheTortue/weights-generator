@@ -37,8 +37,6 @@ def main():
     plt.legend(loc="best")
     plt.show()
 
-    saveTofile(model.layers, "airline.wei")
-
 
 if __name__ == "__main__":
     main()

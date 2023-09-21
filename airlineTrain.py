@@ -83,6 +83,7 @@ def main():
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
 
+    saveTofile(model.layers, "airline.wei")
     model.save("airline.keras")
 
 
