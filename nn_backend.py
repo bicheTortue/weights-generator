@@ -1,6 +1,7 @@
 import numpy as np
 
 from tensorflow.keras.layers import Layer
+import tensorflow as tf
 
 
 class cSigmoid(Layer):
@@ -87,7 +88,7 @@ class cTanh(Layer):
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i: i + lookback, 0]
+        feature = ds[i : i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
