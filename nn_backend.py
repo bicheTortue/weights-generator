@@ -35,7 +35,7 @@ class cSigmoid(Layer):
         return f
 
     def get_config(self):
-        config = {"beta": float(self.beta)}
+        # config = {"beta": float(self.beta)}
         base_config = super(cSigmoid, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
@@ -77,7 +77,7 @@ class cTanh(Layer):
         return f
 
     def get_config(self):
-        config = {"beta": float(self.beta)}
+        # config = {"beta": float(self.beta)}
         base_config = super(cTanh, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
