@@ -134,7 +134,7 @@ def saveTofile(layers, filename):
             nbHid = layer.units
             nbIn = layer.input_shape[1]
             out[0].append("LSTM(" + str(nbHid) + ")")
-            out.append(getLSTMWeights(layer, nbIn, nbhid))
+            out.append(getLSTMWeights(layer, nbIn, nbHid))
 
     with open(filename, "wb") as file:  # Pickling
         pickle.dump(out, file)
