@@ -84,3 +84,7 @@ def main():
     print("Accurracy: {}".format(scores[1]))
 
     model.save("airline.keras")
+
+
+if __name__ == "__main__":
+    main()
