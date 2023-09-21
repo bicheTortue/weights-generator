@@ -44,31 +44,38 @@ def create_model():
     return model
 
 
-def train():
-    # LSTMs have unique 3-dimensional input requirements
-
-    tf.random.set_seed(7)
+def get_dataset():
     df = pd.read_csv("airline.csv")
     ds = df[["Passengers"]].values.astype("float32")
+
+    global train_size
+    train_size = int(len(ds) * 0.67)
+    global test_size
+    test_size = len(ds) - train_size
+
+    return ds
+
+
+def train():
+    # LSTMs have unique 3-dimensional input requirements
+    tf.random.set_seed(7)
+
+    ds = get_dataset()
 
     # normalize the ds
     scaler = MinMaxScaler(feature_range=(0, 1))
     ds = scaler.fit_transform(ds)
 
     # split into train and test sets
-    train_size = int(len(ds) * 0.67)
-    test_size = len(ds) - train_size
     train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train, lookback)
     testX, testY = create_dataset(test, lookback)
-    X, _ = create_dataset(ds, lookback)
 
     # reshape input to be [samples, time steps, features]
     trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], nbInput))
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], nbInput))
-    X = np.reshape(X, (X.shape[0], X.shape[1], nbInput))
 
     model = create_model()
 
@@ -90,6 +97,14 @@ def pred():
 
     print(model.summary())
     model.load_weights("airline.keras")
+
+    ds = get_dataset()
+    # normalize the ds
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    ds = scaler.fit_transform(ds)
+
+    X, _ = create_dataset(ds, lookback)
+    X = np.reshape(X, (X.shape[0], X.shape[1], nbInput))
 
     # make predictions
     predict = model.predict(X)
