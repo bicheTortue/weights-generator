@@ -8,13 +8,9 @@ import pickle
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from matplotlib.collections import LineCollection
-from matplotlib.colors import ListedColormap, BoundaryNorm
 
 # import norm
 from tensorflow.keras.constraints import MinMaxNorm

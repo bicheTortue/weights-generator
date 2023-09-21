@@ -1,3 +1,13 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
+
+from nn_backend import *
+
+
 def main():
     model = tf.keras.models.load_model("airline.keras")
 

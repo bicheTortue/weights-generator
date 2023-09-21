@@ -1,7 +1,9 @@
 import numpy as np
 
-from tensorflow.keras.layers import Layer
 import tensorflow as tf
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
 
 
 class cSigmoid(Layer):
