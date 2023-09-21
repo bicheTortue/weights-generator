@@ -87,7 +87,7 @@ class cTanh(Layer):
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
+        feature = ds[i: i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
@@ -131,7 +131,7 @@ def saveTofile(layers, filename):
         elif type(layer) == LSTM:
             nbHid = layer.units
             nbIn = layer.input_shape[1]
-            out[0].append("LSTM(" + str(nbIn) + "," + str(nbHid) + ")")
+            out[0].append("LSTM(" + str(nbHid) + ")")
             out.append(getLSTMWeights(layer, nbIn, nbhid))
 
     with open(filename, "wb") as file:  # Pickling
