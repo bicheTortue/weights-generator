@@ -23,7 +23,7 @@ lookback = 2
 nbInput = 1
 nbHidden = 4
 nbOutput = 1
-epochs = 3
+epochs = 300
 
 
 def main():
