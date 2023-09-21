@@ -114,7 +114,7 @@ def getLSTMWeights(lstm, nbInput, nbHidden):
     return out
 
 
-def getLinearWeights(nn, nbOutput):
+def getDenseWeights(nn, nbOutput):
     W = nn.get_weights()[0]
     b = list(nn.get_weights()[1])
     out = []
@@ -130,7 +130,7 @@ def saveTofile(layers, filename):
         if type(layer) == Dense:
             nbOut = layer.output_shape[1]
             out[0].append("Dense(" + str(nbOut) + ")")
-            out.append(getLinearWeights(layer, nbOut))
+            out.append(getDenseWeights(layer, nbOut))
         elif type(layer) == LSTM:
             nbHid = layer.units
             nbIn = layer.input_shape[-1]
