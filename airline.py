@@ -48,11 +48,6 @@ def get_dataset():
     df = pd.read_csv("airline.csv")
     ds = df[["Passengers"]].values.astype("float32")
 
-    global train_size
-    train_size = int(len(ds) * 0.67)
-    global test_size
-    test_size = len(ds) - train_size
-
     return ds
 
 
@@ -67,6 +62,8 @@ def train():
     ds = scaler.fit_transform(ds)
 
     # split into train and test sets
+    train_size = int(len(ds) * 0.67)
+    test_size = len(ds) - train_size
     train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
 
     # reshape into X=t and Y=t+1
@@ -135,8 +132,9 @@ def pred():
     testPredictPlot[len(trainPredict) + 1 : len(ds), :] = testPredict
 
     plt.plot(scaler.inverse_transform(ds), label="entire dataset")
-    plt.plot(trainPredictPlot, label="trainPredict")
-    plt.plot(testPredictPlot, label="testPredict")
+    plt.plot(predict, label="predict")
+    # plt.plot(trainPredictPlot, label="trainPredict")
+    # plt.plot(testPredictPlot, label="testPredict")
     plt.legend(loc="best")
     plt.show()
 
