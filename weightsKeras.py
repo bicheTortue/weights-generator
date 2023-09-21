@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import pickle
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Layer
@@ -67,7 +69,7 @@ class cSigmoid(Layer):
     def call(self, inputs):
         l = np.loadtxt("sigmoid.csv", delimiter=",", dtype=np.float32)
         l[:, 0] = (l[:, 0]) * 10
-        l[:, 1] = (l[:, 1]) * 10
+        l[:, 1] = (l[:, 1] - 0.9) * 10
 
         # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
 
@@ -106,7 +108,7 @@ class cTanh(Layer):
     def call(self, inputs):
         l = np.loadtxt("tanh.csv", delimiter=",", dtype=np.float32)
         l[:, 0] = (l[:, 0]) * 10
-        l[:, 1] = (l[:, 1]) * 10
+        l[:, 1] = (l[:, 1] - 0.9) * 10
 
         # cond = [tf.cast(tf.math.less(inputs, l[i, 0]), tf.float32)]
 
@@ -186,6 +188,23 @@ def getLinearWeights(nn, nbOutput):
     return out
 
 
+def saveTofile(layers, filename):
+    out = [[]]
+    for layer in layers:
+        if type(layer) == Dense:
+            nbOut = layer.output_shape[1]
+            out[0].append("Dense(" + str(nbOut) + ")")
+            out.append(getLinearWeights(layer, nbOut))
+        elif type(layer) == LSTM:
+            nbHid = layer.units
+            nbIn = layer.input_shape[1]
+            out[0].append("LSTM(" + str(nbIn) + "," + str(nbHid) + ")")
+            out.append(getLSTMWeights(layer, nbIn, nbhid))
+
+    with open(filename, "wb") as file:  # Pickling
+        pickle.dump(out, file)
+
+
 def main():
     # LSTMs have unique 3-dimensional input requirements
 
@@ -229,16 +248,13 @@ def main():
     model.add(Dense(nbOutput, kernel_initializer="normal", activation="linear"))
 
     print(model.summary())
+
     model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
     model.fit(
         trainX, trainY, epochs=epochs, batch_size=1, validation_split=0.35, verbose=1
     )
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
-
-    test = getLSTMWeights(model.layers[0], nbInput, nbHidden)
-    print(test.shape())
-    exit()
 
     # make predictions
     predict = model.predict(X)
@@ -274,8 +290,7 @@ def main():
     plt.legend(loc="best")
     plt.show()
 
-    np.savetxt("lstm.wei", test)
-    np.savetxt("dense.wei", getLinearWeights(model.layers[1], nbOutput))
+    saveTofile(model.layers, "airline.wei")
 
 
 if __name__ == "__main__":
