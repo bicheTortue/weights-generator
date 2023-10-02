@@ -139,39 +139,3 @@ def saveTofile(layers, filename):
 
     with open(filename, "wb") as file:  # Pickling
         pickle.dump(out, file)
-
-
-# Unused kept just in case
-class bTanh(Layer):
-    def __init__(self, beta, **kwargs):
-        super(cTanh, self).__init__(**kwargs)
-        self.beta = K.cast_to_floatx(beta)
-
-    def call(self, inputs):
-        # return K.tanh(self.beta * inputs)
-        return K.sigmoid(self.beta * inputs) * 2 - 1
-
-    def get_config(self):
-        config = {"beta": float(self.beta)}
-        base_config = super(cTanh, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
-
-class bSigm(Layer):
-    def __init__(self, beta, **kwargs):
-        super(cSigm, self).__init__(**kwargs)
-        self.beta = K.cast_to_floatx(beta)
-
-    def call(self, inputs):
-        return K.sigmoid(self.beta * inputs)
-
-    def get_config(self):
-        config = {"beta": float(self.beta)}
-        base_config = super(cSigm, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
