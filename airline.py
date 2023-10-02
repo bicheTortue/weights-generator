@@ -17,7 +17,7 @@ from tensorflow.keras.constraints import MinMaxNorm
 from keras import backend as K
 from tensorflow.keras.layers import Activation
 
-from barbaLib import *
+from barbalib import *
 
 # Global vars
 lookback = 2
