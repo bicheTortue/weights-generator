@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+
+plt.rcParams["svg.fonttype"] = "none"
 from pathlib import Path
 
 
@@ -55,7 +57,7 @@ def plot_data(sequences, dtype, var, folder, path):
         seq.plot(kind="line")
         plt.legend(loc="upper left")
         Path(path + folder + dtype).mkdir(parents=True, exist_ok=True)
-        plt.savefig(path + folder + dtype + var + str(i) + "_plots.pdf")
+        plt.savefig(path + folder + dtype + var + str(i) + "_plots.svg")
         plt.close()
 
         i = i + 1
