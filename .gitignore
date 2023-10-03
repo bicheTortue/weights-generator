@@ -3,3 +3,4 @@ test*
 *.wei
 *.keras
 predict*
+celegans_out/
