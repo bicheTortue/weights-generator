@@ -51,6 +51,16 @@ def get_dataset():
     return ds
 
 
+def create_dataset(ds, lookback=1):
+    X, y = [], []
+    for i in range(len(ds) - lookback):
+        feature = ds[i : i + lookback, 0]
+        target = ds[i + lookback, 0]
+        X.append(feature)
+        y.append(target)
+    return np.array(X), np.array(y)
+
+
 def train():
     # LSTMs have unique 3-dimensional input requirements
     tf.random.set_seed(7)

@@ -87,16 +87,6 @@ class cTanh(Layer):
         return input_shape
 
 
-def create_dataset(ds, lookback=1):
-    X, y = [], []
-    for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
-        target = ds[i + lookback, 0]
-        X.append(feature)
-        y.append(target)
-    return np.array(X), np.array(y)
-
-
 def getLSTMWeights(lstm, nbHidden):
     W = lstm.get_weights()[0]
     U = lstm.get_weights()[1]
