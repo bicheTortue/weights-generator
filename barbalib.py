@@ -97,7 +97,7 @@ def create_dataset(ds, lookback=1):
     return np.array(X), np.array(y)
 
 
-def getLSTMWeights(lstm, nbInput, nbHidden):
+def getLSTMWeights(lstm, nbHidden):
     W = lstm.get_weights()[0]
     U = lstm.get_weights()[1]
     b = lstm.get_weights()[2]
@@ -107,9 +107,8 @@ def getLSTMWeights(lstm, nbInput, nbHidden):
     for i in range(nbGates):
         out[i] = []
         for j in range(nbHidden):
-            for k in range(nbInput):
-                out[i].extend(W[:, i * nbGates + j * nbInput])
-            out[i].extend(U[:, i])
+            out[i].extend(W[:, i * nbGates + j])
+            out[i].extend(U[:, i * nbGates + j])
             out[i].append(b[i * nbGates + j])
     return out
 
@@ -133,9 +132,8 @@ def saveTofile(layers, filename):
             out.append(getDenseWeights(layer, nbOut))
         elif type(layer) == LSTM:
             nbHid = layer.units
-            nbIn = layer.input_shape[-1]
             out[0].append("LSTM(" + str(nbHid) + ")")
-            out.append(getLSTMWeights(layer, nbIn, nbHid))
+            out.append(getLSTMWeights(layer, nbHid))
 
     with open(filename, "wb") as file:  # Pickling
         pickle.dump(out, file)
