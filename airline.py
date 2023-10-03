@@ -19,20 +19,13 @@ from tensorflow.keras.layers import Activation
 
 from barbalib import *
 
-# Global vars
-lookback = 2
-nbInput = 1
-nbHidden = 4
-nbOutput = 1
-epochs = 300
 
-
-def create_model():
+def create_model(args):
     model = Sequential()
     model.add(
         LSTM(
-            nbHidden,
-            input_shape=(lookback, nbInput),
+            args.hidden_size,
+            input_shape=(args.lookback, args.input_size),
             kernel_constraint=MinMaxNorm(-1, 1),
             recurrent_constraint=MinMaxNorm(-1, 1),
             bias_constraint=MinMaxNorm(-1, 1),
@@ -40,7 +33,7 @@ def create_model():
             activation=cTanh(),
         )
     )
-    model.add(Dense(nbOutput, kernel_initializer="normal", activation="linear"))
+    model.add(Dense(args.output_size, kernel_initializer="normal", activation="linear"))
     return model
 
 
@@ -61,7 +54,7 @@ def create_dataset(ds, lookback=1):
     return np.array(X), np.array(y)
 
 
-def train():
+def train(args):
     # LSTMs have unique 3-dimensional input requirements
     tf.random.set_seed(7)
 
@@ -84,11 +77,16 @@ def train():
     trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], nbInput))
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], nbInput))
 
-    model = create_model()
+    model = create_model(args)
 
     model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
     model.fit(
-        trainX, trainY, epochs=epochs, batch_size=1, validation_split=0.35, verbose=1
+        trainX,
+        trainY,
+        epochs=args.epochs,
+        batch_size=1,
+        validation_split=0.35,
+        verbose=1,
     )
     model.summary()
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
@@ -98,8 +96,8 @@ def train():
     model.save_weights("airline.keras")
 
 
-def pred():
-    model = create_model()
+def pred(args):
+    model = create_model(args)
 
     model.summary()
     model.load_weights("airline.keras")
@@ -116,19 +114,14 @@ def pred():
     predict = model.predict(X)
     df = pd.DataFrame(predict)
     df.columns = ["digital"]
-    df.to_csv("predict.csv")
-    predict = scaler.inverse_transform(predict)
-
-    # calculate root mean squared error
-    # trainScore = np.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
-    # print("Train Score: %.2f RMSE" % (trainScore))
-    # testScore = np.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
-    # print("Test Score: %.2f RMSE" % (testScore))
-
-    plt.plot(scaler.inverse_transform(ds), label="entire dataset")
-    plt.plot(predict, label="predict")
-    plt.legend(loc="best")
-    plt.show()
+    if args.save:
+        df.to_csv("predict.csv")
+    elif args.plot:
+        predict = scaler.inverse_transform(predict)
+        plt.plot(scaler.inverse_transform(ds), label="entire dataset")
+        plt.plot(predict, label="predict")
+        plt.legend(loc="best")
+        plt.show()
 
 
 def main():
@@ -139,13 +132,32 @@ def main():
     parser.add_argument("--train", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--pred", action=argparse.BooleanOptionalAction, default=False)
 
+    # Global args
+    parser.add_argument("--model", choices=["LSTM", "GRU", "RNN"], default="LSTM")
+    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--lookback", type=int, default=2)
+    parser.add_argument("--input_size", type=int, default=1)
+    parser.add_argument("--hidden_size", type=int, default=4)
+    parser.add_argument("--output_size", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=300)
+    # Train required
+    parser.add_argument(
+        "--optimizer",
+        choices=["sgd", "rmsprop", "adam"],
+        default="adam",
+    )
+
+    # Pred required
+    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=True)
+
     args = parser.parse_args()
 
     if args.train:
-        train()
+        train(args)
 
     if args.pred:
-        pred()
+        pred(args)
 
 
 if __name__ == "__main__":
