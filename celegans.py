@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
+import glob
+from keras.models import load_model
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -32,6 +34,7 @@ def create_model(opt, output_size):
         model.add(
             LSTM(
                 opt.hidden_size,
+                input_shape=(1000, 4),
                 kernel_constraint=MinMaxNorm(-1, 1),
                 recurrent_constraint=MinMaxNorm(-1, 1),
                 bias_constraint=MinMaxNorm(-1, 1),
@@ -69,6 +72,16 @@ def save_history(history, opt):
     np.savetxt(opt.savepath + "training_history.dat", a, delimiter=" ")
 
 
+def load_best_weights(opt, model):
+    checkpoint_dir = opt.savepath + "weights/*"
+    list_files = glob.glob(checkpoint_dir)
+    latest = max(list_files, key=os.path.getctime)
+    # print(latest)
+    model.load_weights(latest)
+
+    return model
+
+
 def get_callbacks(opt):
     filepath = opt.savepath + "weights/weights-{epoch:02d}-{val_loss:.6f}.hdf5"
     checkpoint = ModelCheckpoint(
@@ -76,7 +89,7 @@ def get_callbacks(opt):
         monitor="val_loss",
         verbose=1,
         save_best_only=True,
-        save_weights_only=True,
+        save_weights_only=False,
         mode="auto",
         period=1,
     )
@@ -175,7 +188,7 @@ def plot_results(opt, real, predicted, folder, string, path, out_size):
         if opt.plots_out:
             plt.legend(loc="upper right")
             Path(path + "results_plots").mkdir(parents=True, exist_ok=True)
-            plt.savefig(path + "results_plots" + string + str(i) + "_response.pdf")
+            plt.savefig(path + "results_plots" + string + str(i) + "_response.svg")
             plt.close()
 
         i = i + 1
@@ -231,14 +244,14 @@ def train(opt):
     )
     model.summary()
     save_history(history, opt)
-    # model = loadweights(opt, model)
-    # model.save(opt.savepath + "model.h5")
+    model = load_best_weights(opt, model)
+    model.save(opt.savepath + "celegans.h5")
 
     saveTofile(model.layers, "celegans.wei")
-    model.save_weights("celegans.keras")
+    # model.save_weights("celegans.keras")
 
 
-def pred():
+def pred(opt):
     ###########################################################################
     # Variables Definition
     ###########################################################################
@@ -265,10 +278,13 @@ def pred():
     # Load Model and Evaluate
     ###########################################################################
     output_size = 4
-    model = create_model(opt, output_size)
-    print(model.summary())
-    model.load_weights("celegans.keras")
-    # model = load_model(opt.savepath + "model.h5")
+    # model = create_model(opt, output_size)
+    # model.load_weights("celegans.keras")
+    model = load_model(
+        opt.savepath + "celegans.h5",
+        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid},
+    )
+    model.summary()
 
     lt, lv, ltt = evaluate_results(
         model, opt, trainx, trainy, validx, validy, testx, testy, output_size
