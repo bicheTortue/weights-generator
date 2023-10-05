@@ -22,9 +22,10 @@ from barbalib import *
 
 
 def create_model(args):
-    inBus = args.input_size + args.hidden_size + 1
-    limits = MinMaxNorm(-9 / inBus, 9 / inBus)
     model = Sequential()
+    # Limits for the weights in the lstm
+    lim_val = 9 / (args.input_size + args.hidden_size + 1)
+    limits = MinMaxNorm(-lim_val, lim_val)
     model.add(
         LSTM(
             args.hidden_size,
@@ -36,7 +37,17 @@ def create_model(args):
             activation=cTanh(),
         )
     )
-    model.add(Dense(args.output_size, kernel_initializer="normal", activation="linear"))
+    lim_val = 9 / (args.hidden_size + 1)
+    limits = MinMaxNorm(-lim_val, lim_val)
+    model.add(
+        Dense(
+            args.output_size,
+            kernel_initializer="normal",
+            activation="linear",
+            # kernel_constraint=limits,
+            # bias_constraint=limits,
+        )
+    )
     return model
 
 
