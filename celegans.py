@@ -29,15 +29,17 @@ from barbalib import *
 
 
 def create_model(opt, output_size):
+    inBus = opt.input_size + opt.hidden_size + 1
+    limits = MinMaxNorm(-9 / inBus, 9 / inBus)
     model = Sequential()
     if opt.model == "LSTM":
         model.add(
             LSTM(
                 opt.hidden_size,
                 input_shape=(1000, 4),
-                kernel_constraint=MinMaxNorm(-1, 1),
-                recurrent_constraint=MinMaxNorm(-1, 1),
-                bias_constraint=MinMaxNorm(-1, 1),
+                kernel_constraint=limits,
+                recurrent_constraint=limits,
+                bias_constraint=limits,
                 recurrent_activation=cSigmoid(),
                 activation=cTanh(),
                 return_sequences=True,

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
+from keras.models import load_model
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -21,14 +22,16 @@ from barbalib import *
 
 
 def create_model(args):
+    inBus = args.input_size + args.hidden_size + 1
+    limits = MinMaxNorm(-9 / inBus, 9 / inBus)
     model = Sequential()
     model.add(
         LSTM(
             args.hidden_size,
             input_shape=(args.lookback, args.input_size),
-            kernel_constraint=MinMaxNorm(-1, 1),
-            recurrent_constraint=MinMaxNorm(-1, 1),
-            bias_constraint=MinMaxNorm(-1, 1),
+            kernel_constraint=limits,
+            recurrent_constraint=limits,
+            bias_constraint=limits,
             recurrent_activation=cSigmoid(),
             activation=cTanh(),
         )
@@ -70,12 +73,12 @@ def train(args):
     train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
 
     # reshape into X=t and Y=t+1
-    trainX, trainY = create_dataset(train, lookback)
-    testX, testY = create_dataset(test, lookback)
+    trainX, trainY = create_dataset(train, args.lookback)
+    testX, testY = create_dataset(test, args.lookback)
 
     # reshape input to be [samples, time steps, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], nbInput))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], nbInput))
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], args.input_size))
+    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], args.input_size))
 
     model = create_model(args)
 
@@ -93,22 +96,25 @@ def train(args):
     print("Accurracy: {}".format(scores[1]))
 
     saveTofile(model.layers, "airline.wei")
-    model.save_weights("airline.keras")
+    # model.save_weights("airline.keras")
+    model.save("airline.h5")
 
 
 def pred(args):
-    model = create_model(args)
+    model = load_model(
+        "airline.h5",
+        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid},
+    )
 
     model.summary()
-    model.load_weights("airline.keras")
 
     ds = get_dataset()
     # normalize the ds
     scaler = MinMaxScaler(feature_range=(0, 1))
     ds = scaler.fit_transform(ds)
 
-    X, _ = create_dataset(ds, lookback)
-    X = np.reshape(X, (X.shape[0], X.shape[1], nbInput))
+    X, _ = create_dataset(ds, args.lookback)
+    X = np.reshape(X, (X.shape[0], X.shape[1], args.input_size))
 
     # make predictions
     predict = model.predict(X)
@@ -148,8 +154,8 @@ def main():
     )
 
     # Pred required
-    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=False)
 
     args = parser.parse_args()
 
