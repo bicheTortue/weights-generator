@@ -22,6 +22,12 @@ from barbalib import *
 
 
 def create_model(args):
+    if args.custom:
+        sigm = cSigmoid()
+        tanh = cTanh()
+    else:
+        sigm = Activation("sigmoid")
+        tanh = Activation("tanh")
     model = Sequential()
     # Limits for the weights in the lstm
     lim_val = 9 / (args.input_size + args.hidden_size + 1)
@@ -33,12 +39,10 @@ def create_model(args):
             kernel_constraint=limits,
             recurrent_constraint=limits,
             bias_constraint=limits,
-            recurrent_activation=cSigmoid(),
-            activation=cTanh(),
+            recurrent_activation=sigm,
+            activation=tanh,
         )
     )
-    lim_val = 9 / (args.hidden_size + 1)
-    limits = MinMaxNorm(-lim_val, lim_val)
     model.add(
         Dense(
             args.output_size,
@@ -114,7 +118,7 @@ def train(args):
 def pred(args):
     model = load_model(
         "airline.h5",
-        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid},
+        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid, "Activation": Activation},
     )
 
     model.summary()
@@ -133,7 +137,7 @@ def pred(args):
     df.columns = ["digital"]
     if args.save:
         df.to_csv("predict.csv")
-    elif args.plot:
+    if args.plot:
         predict = scaler.inverse_transform(predict)
         plt.plot(scaler.inverse_transform(ds), label="entire dataset")
         plt.plot(predict, label="predict")
@@ -158,6 +162,12 @@ def main():
     parser.add_argument("--output_size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=300)
     # Train required
+    parser.add_argument(
+        "--custom",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether the training will use the custom sigmoid and tanh functions",
+    )
     parser.add_argument(
         "--optimizer",
         choices=["sgd", "rmsprop", "adam"],

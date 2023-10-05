@@ -29,8 +29,14 @@ from barbalib import *
 
 
 def create_model(opt, output_size):
-    inBus = opt.input_size + opt.hidden_size + 1
-    limits = MinMaxNorm(-9 / inBus, 9 / inBus)
+    if args.custom:
+        sigm = cSigmoid()
+        tanh = cTanh()
+    else:
+        sigm = Activation("sigmoid")
+        tanh = Activation("tanh")
+    lim_val = 9 / (args.input_size + args.hidden_size + 1)
+    limits = MinMaxNorm(-lim_val, lim_val)
     model = Sequential()
     if opt.model == "LSTM":
         model.add(
@@ -40,8 +46,8 @@ def create_model(opt, output_size):
                 kernel_constraint=limits,
                 recurrent_constraint=limits,
                 bias_constraint=limits,
-                recurrent_activation=cSigmoid(),
-                activation=cTanh(),
+                recurrent_activation=sigm,
+                activation=tanh,
                 return_sequences=True,
             )
         )
@@ -284,7 +290,7 @@ def pred(opt):
     # model.load_weights("celegans.keras")
     model = load_model(
         opt.savepath + "celegans.h5",
-        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid},
+        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid, "Activation": Activation},
     )
     model.summary()
 
@@ -314,6 +320,12 @@ def main():
     parser.add_argument("--extension", type=str, default=".dat")
     parser.add_argument("--batch_size", type=int, default=32)
     # Train required
+    parser.add_argument(
+        "--custom",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether the training will use the custom sigmoid and tanh functions",
+    )
     parser.add_argument("--epochs", type=int, default=1000)
     parser.add_argument("--hidden_size", type=int, default=4)
     parser.add_argument("--learning_rate", type=float, default=0.05)
