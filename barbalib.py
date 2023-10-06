@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
+from keras.layers import TimeDistributed
 
 
 class cSigmoid(Layer):
@@ -116,6 +117,11 @@ def getDenseWeights(nn, nbOutput):
 def saveTofile(layers, filename):
     out = [[]]
     for layer in layers:
+        print(type(layer))
+        if type(layer) == TimeDistributed:
+            nbOut = layer.output_shape[1]
+            out[0].append("tDense(" + str(nbOut) + ")")
+            out.append(getDenseWeights(layer, nbOut))
         if type(layer) == Dense:
             nbOut = layer.output_shape[1]
             out[0].append("Dense(" + str(nbOut) + ")")

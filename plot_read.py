@@ -52,12 +52,9 @@ def read_data(data_path, file_list, cols, nin, nout):
 
 
 def plot_data(sequences, dtype, var, folder, path):
-    i = 0
-    for seq in sequences:
+    for i, seq in enumerate(sequences):
         seq.plot(kind="line")
         plt.legend(loc="upper left")
         Path(path + folder + dtype).mkdir(parents=True, exist_ok=True)
         plt.savefig(path + folder + dtype + var + str(i) + "_plots.svg")
         plt.close()
-
-        i = i + 1

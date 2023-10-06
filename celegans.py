@@ -14,6 +14,7 @@ from keras.layers import GRU
 from keras.layers import SimpleRNN
 from keras.layers import TimeDistributed
 from keras.layers import Dense
+from keras.layers import Activation
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
 from keras.optimizers import RMSprop
@@ -29,13 +30,13 @@ from barbalib import *
 
 
 def create_model(opt, output_size):
-    if args.custom:
+    if opt.custom:
         sigm = cSigmoid()
         tanh = cTanh()
     else:
         sigm = Activation("sigmoid")
         tanh = Activation("tanh")
-    lim_val = 9 / (args.input_size + args.hidden_size + 1)
+    lim_val = 9 / (opt.input_size + opt.hidden_size + 1)
     limits = MinMaxNorm(-lim_val, lim_val)
     model = Sequential()
     if opt.model == "LSTM":
@@ -152,9 +153,7 @@ def evaluate_results(
         workers=12,
         use_multiprocessing=True,
     )
-    plot_results(
-        opt, trainy, trainPredict, opt.model, "/train", opt.savepath, output_size
-    )
+    plot_results(opt, trainy, trainPredict, "/train", output_size)
     validPredict = model.predict(
         np.array(validx),
         batch_size=opt.batch_size,
@@ -162,9 +161,7 @@ def evaluate_results(
         workers=12,
         use_multiprocessing=True,
     )
-    plot_results(
-        opt, validy, validPredict, opt.model, "/valid", opt.savepath, output_size
-    )
+    plot_results(opt, validy, validPredict, "/valid", output_size)
     testPredict = model.predict(
         np.array(testx),
         batch_size=opt.batch_size,
@@ -172,34 +169,33 @@ def evaluate_results(
         workers=12,
         use_multiprocessing=True,
     )
-    plot_results(opt, testy, testPredict, opt.model, "/test", opt.savepath, output_size)
+    plot_results(opt, testy, testPredict, "/test", output_size)
 
     return train_l, valid_l, test_l
 
 
-def plot_results(opt, real, predicted, folder, string, path, out_size):
+def plot_results(opt, real, predicted, string, out_size):
     cols = ["DB1_Predicted", "LUAL_Predicted", "PVR_Predicted", "VB1_Predicted"]
 
-    i = 0
-    for frame in predicted:
+    for i, frame in enumerate(predicted):
         pos = real[i].shape[1]
         for j in range(out_size):
             real[i].insert(loc=pos, column=cols[j], value=frame[:, j])
             pos = pos + 1
         real[i].plot(kind="line")
-        Path(path + "results_files").mkdir(parents=True, exist_ok=True)
+        Path(opt.savepath + "results_files").mkdir(parents=True, exist_ok=True)
         real[i].to_csv(
-            path + "results_files" + string + str(i) + "_data.dat",
+            opt.savepath + "results_files" + string + str(i) + "_data.dat",
             sep=" ",
             header=False,
         )
         if opt.plots_out:
             plt.legend(loc="upper right")
-            Path(path + "results_plots").mkdir(parents=True, exist_ok=True)
-            plt.savefig(path + "results_plots" + string + str(i) + "_response.svg")
+            Path(opt.savepath + "results_plots").mkdir(parents=True, exist_ok=True)
+            plt.savefig(
+                opt.savepath + "results_plots" + string + str(i) + "_response.svg"
+            )
             plt.close()
-
-        i = i + 1
 
 
 def train(opt):
@@ -315,6 +311,7 @@ def main():
     ###########################################################################
     # Global args
     parser.add_argument("--model", choices=["LSTM", "GRU", "RNN"], default="LSTM")
+    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--datapath", type=str, default="./celegans_data/")
     parser.add_argument("--savepath", type=str, default="./celegans_out/run0/")
     parser.add_argument("--extension", type=str, default=".dat")
@@ -327,6 +324,7 @@ def main():
         help="Whether the training will use the custom sigmoid and tanh functions",
     )
     parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--input_size", type=int, default=4)
     parser.add_argument("--hidden_size", type=int, default=4)
     parser.add_argument("--learning_rate", type=float, default=0.05)
     parser.add_argument(
