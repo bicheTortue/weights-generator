@@ -1,9 +1,9 @@
+from pathlib import Path
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
 plt.rcParams["svg.fonttype"] = "none"
-from pathlib import Path
 
 
 def get_data(data_path, ext):
@@ -28,7 +28,6 @@ def split_data(data_list):
         saved_list.append(file)
     for i in range(len(test_set)):
         test.append(data_list.pop(test_set[i] - 1))
-    for i in range(len(test_set)):
         valid.append(saved_list.pop(valid_set[i] - 1))
     train = [x for x in data_list if x in saved_list]
 
@@ -39,9 +38,7 @@ def read_data(data_path, file_list, cols, nin, nout):
     datax = []
     datay = []
     for file in file_list:
-        df = pd.read_csv(
-            data_path + file, sep="\s+", names=cols  # separator whitespace
-        )
+        df = pd.read_csv(data_path + file, sep="\s+", names=cols)
         df = df.set_index("time")
         x = df.drop(columns=nout[1:5])
         y = df.drop(columns=nin[1:5])
