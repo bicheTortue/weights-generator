@@ -65,11 +65,13 @@ def get_dataset():
 def create_dataset(ds, lookback=1):
     X, y = [], []
     for i in range(len(ds) - lookback):
-        feature = ds[i : i + lookback, 0]
+        feature = ds[i: i + lookback, 0]
         target = ds[i + lookback, 0]
         X.append(feature)
         y.append(target)
-    return np.array(X), np.array(y)
+
+
+tt return np.array(X), np.array(y)
 
 
 def train(args):
@@ -85,15 +87,17 @@ def train(args):
     # split into train and test sets
     train_size = int(len(ds) * 0.67)
     test_size = len(ds) - train_size
-    train, test = ds[0:train_size, :], ds[train_size : len(ds), :]
+    train, test = ds[0:train_size, :], ds[train_size: len(ds), :]
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train, args.lookback)
     testX, testY = create_dataset(test, args.lookback)
 
     # reshape input to be [samples, time steps, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], args.input_size))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], args.input_size))
+    trainX = np.reshape(
+        trainX, (trainX.shape[0], trainX.shape[1], args.input_size))
+    testX = np.reshape(
+        testX, (testX.shape[0], testX.shape[1], args.input_size))
 
     model = create_model(args)
 
@@ -118,7 +122,8 @@ def train(args):
 def pred(args):
     model = load_model(
         "airline.h5",
-        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid, "Activation": Activation},
+        custom_objects={"cTanh": cTanh,
+                        "cSigmoid": cSigmoid, "Activation": Activation},
     )
 
     model.summary()
@@ -150,11 +155,14 @@ def main():
         prog="LSTM weight",
         description="This program is used to generate the weights used to later import in a netlist.",
     )
-    parser.add_argument("--train", action=argparse.BooleanOptionalAction, default=False)
-    parser.add_argument("--pred", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument(
+        "--train", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument(
+        "--pred", action=argparse.BooleanOptionalAction, default=False)
 
     # Global args
-    parser.add_argument("--model", choices=["LSTM", "GRU", "RNN"], default="LSTM")
+    parser.add_argument(
+        "--model", choices=["LSTM", "GRU", "RNN"], default="LSTM")
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--lookback", type=int, default=2)
     parser.add_argument("--input_size", type=int, default=1)
@@ -175,8 +183,10 @@ def main():
     )
 
     # Pred required
-    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=False)
-    parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument(
+        "--save", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument(
+        "--plot", action=argparse.BooleanOptionalAction, default=False)
 
     args = parser.parse_args()
 
