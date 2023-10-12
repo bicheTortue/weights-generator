@@ -14,10 +14,6 @@ neurons = ["time", "DB1", "LUAL", "PVR", "VB1", "PLML2", "PLMR", "AVBL", "AVBR"]
 files = get_data("celegans_data/", ".dat")
 X, _ = read_data("celegans_data/", files, neurons, nin, nout)
 
-print(X[0].shape)
-# for i in X[0].iloc[:, 0]:
-# print(i)
-
 for i, x in enumerate(X):
     print("<corner enabled='1'>test" + str(i))
     print("<vars>")

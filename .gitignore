@@ -5,3 +5,4 @@ test*
 *.h5
 predict*
 celegans_out/
+tmp*

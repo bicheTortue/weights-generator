@@ -247,11 +247,11 @@ def train(opt):
         use_multiprocessing=True,
     )
     model.summary()
+    save_history(history, opt)
+    model = load_best_weights(opt, model)
     if opt.save:
-        save_history(history, opt)
-        model = load_best_weights(opt, model)
-        model.save(opt.savepath + "celegans.h5")
         saveTofile(model.layers, "celegans.wei")
+    model.save(opt.savepath + "celegans.h5")
 
 
 def pred(opt):

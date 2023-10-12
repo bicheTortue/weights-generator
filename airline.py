@@ -112,7 +112,7 @@ def train(args):
 
     if args.save:
         saveTofile(model.layers, "airline.wei")
-        model.save("airline.h5")
+    model.save("airline.h5")
 
 
 def pred(args):
