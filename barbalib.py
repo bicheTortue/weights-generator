@@ -88,6 +88,14 @@ class cTanh(Layer):
         return input_shape
 
 
+def read_af(path):
+    l = np.loadtxt(path, delimiter=",", dtype=np.float32)
+    l[:, 0] = l[:, 0] * 10
+    l[:, 1] = (l[:, 1] - 0.9) * 10
+
+    return l
+
+
 def getLSTMWeights(lstm, nbHidden):
     W, U, b = lstm.get_weights()
     nbGates = 4
@@ -115,9 +123,8 @@ def getDenseWeights(nn, nbOutput):
 def saveTofile(layers, filename):
     out = [[]]
     for layer in layers:
-        print(type(layer))
         if type(layer) == TimeDistributed:
-            nbOut = layer.output_shape[1]
+            nbOut = layer.output_shape[-1]
             out[0].append("tDense(" + str(nbOut) + ")")
             out.append(getDenseWeights(layer, nbOut))
         if type(layer) == Dense:
