@@ -97,9 +97,7 @@ def read_af(path):
 
 
 def getLSTMWeights(lstm, nbHidden):
-    W = lstm.get_weights()[0]
-    U = lstm.get_weights()[1]
-    b = lstm.get_weights()[2]
+    W, U, b = lstm.get_weights()
     nbGates = 4
     out = [None] * nbGates
 
