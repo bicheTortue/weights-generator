@@ -31,8 +31,8 @@ from barbalib import *
 
 def create_model(opt, output_size):
     if opt.custom:
-        sigm = cActiv(read_af("sigmoid.csv"))
-        tanh = cActiv(read_af("tanh.csv"))
+        sigm = cSigmoid()
+        tanh = cTanh()
     else:
         sigm = Activation("sigmoid")
         tanh = Activation("tanh")

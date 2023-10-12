@@ -8,39 +8,6 @@ from tensorflow.keras.layers import LSTM
 from keras.layers import TimeDistributed
 
 
-class cActiv(Layer):
-    def __init__(self, l, **kwargs):
-        super(cActiv, self).__init__(**kwargs)
-        self.l = l
-        self.nb_seg = len(l) - 1
-
-    def call(self, inputs):
-        l = self.l
-
-        f = tf.where(tf.less(inputs, l[0, 0]), float(int(l[0, 1])), 0.0)
-        for i in range(self.nb_seg):
-            left_bound, right_bound = l[i, 0], l[i + 1, 0]
-            a = (l[i + 1, 1] - l[i, 1]) / (right_bound - left_bound)
-            b = l[i, 1] - a * left_bound
-            segment_mask = tf.logical_and(
-                tf.greater_equal(inputs, left_bound), tf.less(inputs, right_bound)
-            )
-            f += tf.where(segment_mask, a * inputs + b, 0.0)
-
-        last_segment_mask = tf.greater_equal(inputs, l[self.nb_seg, 0])
-        f += tf.where(last_segment_mask, 1.0, 0.0)
-
-        return f
-
-    def get_config(self):
-        config = {"l": self.l}
-        base_config = super(cActiv, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
-
 class cSigmoid(Layer):
     def __init__(self, **kwargs):
         super(cSigmoid, self).__init__(**kwargs)
