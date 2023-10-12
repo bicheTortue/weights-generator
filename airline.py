@@ -23,8 +23,8 @@ from barbalib import *
 
 def create_model(args):
     if args.custom:
-        sigm = cSigmoid()
-        tanh = cTanh()
+        sigm = cActiv(read_af("sigmoid.csv"))
+        tanh = cActiv(read_af("tanh.csv"))
     else:
         sigm = Activation("sigmoid")
         tanh = Activation("tanh")
@@ -118,7 +118,7 @@ def train(args):
 def pred(args):
     model = load_model(
         "airline.h5",
-        custom_objects={"cTanh": cTanh, "cSigmoid": cSigmoid, "Activation": Activation},
+        custom_objects={"cActiv": cActiv, "Activation": Activation},
     )
 
     model.summary()
