@@ -4,46 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-
-# Global vars
-lookback = 2
+from plot_read import *
 
 
-def create_dataset(ds, lookback=1):
-    X, y = [], []
-    for i in range(len(ds) - lookback):
-        feature = ds[i: i + lookback, 0]
-        target = ds[i + lookback, 0]
-        X.append(feature)
-        y.append(target)
-    return np.array(X), np.array(y)
+nin = ["time", "PLML2", "PLMR", "AVBL", "AVBR"]
+nout = ["time", "DB1", "LUAL", "PVR", "VB1"]
+neurons = ["time", "DB1", "LUAL", "PVR", "VB1", "PLML2", "PLMR", "AVBL", "AVBR"]
 
+files = get_data("celegans_data/", ".dat")
+X, _ = read_data("celegans_data/", files, neurons, nin, nout)
 
-# LSTMs have unique 3-dimensional input requirements
-
-df = pd.read_csv("airline.csv")
-ds = df[["Passengers"]].values.astype("float32")
-
-# normalize the ds
-scaler = MinMaxScaler(feature_range=(0, 1))
-ds = scaler.fit_transform(ds)
-
-X, _ = create_dataset(ds, lookback)
-
-# Does not support more than 1 input so far
+print(X[0].shape)
+# for i in X[0].iloc[:, 0]:
+# print(i)
 
 for i, x in enumerate(X):
     print("<corner enabled='1'>test" + str(i))
     print("<vars>")
-    for j, val in enumerate(x):
-        # nb inputs will have to change here (the zero)
-        print("<var>in0step" + str(j))
-        tmpVal = val/10
-        tmpVal = float("%.2g" % tmpVal)
-        print("<value>" + str(tmpVal) + "</value>")
-        print("</var>")
-    print("<var>step")
-    print("<value>" + str(i) + "</value>")
-    print("</var>")
+    for j in range(x.shape[-1]):
+        for k, val in enumerate(x.iloc[:, j]):
+            # nb inputs will have to change here (the zero)
+            print("<var>in" + str(j) + "step" + str(k))
+            tmpVal = val / 10
+            tmpVal = float("%.2g" % tmpVal)
+            print("<value>" + str(tmpVal) + "</value>")
+            print("</var>")
     print("</vars>")
     print("</corner>")
