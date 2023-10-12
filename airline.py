@@ -110,9 +110,9 @@ def train(args):
     scores = model.evaluate(trainX, trainY, verbose=1, batch_size=1)
     print("Accurracy: {}".format(scores[1]))
 
-    saveTofile(model.layers, "airline.wei")
-    # model.save_weights("airline.keras")
-    model.save("airline.h5")
+    if args.save:
+        saveTofile(model.layers, "airline.wei")
+        model.save("airline.h5")
 
 
 def pred(args):

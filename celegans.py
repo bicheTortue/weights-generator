@@ -247,12 +247,11 @@ def train(opt):
         use_multiprocessing=True,
     )
     model.summary()
-    save_history(history, opt)
-    model = load_best_weights(opt, model)
-    model.save(opt.savepath + "celegans.h5")
-
-    saveTofile(model.layers, "celegans.wei")
-    # model.save_weights("celegans.keras")
+    if opt.save:
+        save_history(history, opt)
+        model = load_best_weights(opt, model)
+        model.save(opt.savepath + "celegans.h5")
+        saveTofile(model.layers, "celegans.wei")
 
 
 def pred(opt):
@@ -311,7 +310,7 @@ def main():
     ###########################################################################
     # Global args
     parser.add_argument("--model", choices=["LSTM", "GRU", "RNN"], default="LSTM")
-    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--save", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--datapath", type=str, default="./celegans_data/")
     parser.add_argument("--savepath", type=str, default="./celegans_out/run0/")
     parser.add_argument("--extension", type=str, default=".dat")
