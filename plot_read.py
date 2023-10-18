@@ -8,7 +8,7 @@ plt.rcParams["svg.fonttype"] = "none"
 
 def get_data(data_path, ext):
     files_list = []
-    files = os.listdir(data_path)
+    files = sorted(os.listdir(data_path))
     for file in files:
         if file.endswith(ext):
             files_list.append(file)
