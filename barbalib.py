@@ -88,14 +88,6 @@ class cTanh(Layer):
         return input_shape
 
 
-def read_af(path):
-    l = np.loadtxt(path, delimiter=",", dtype=np.float32)
-    l[:, 0] = l[:, 0] * 10
-    l[:, 1] = (l[:, 1] - 0.9) * 10
-
-    return l
-
-
 def getLSTMWeights(lstm, nbHidden):
     W, U, b = lstm.get_weights()
     nbGates = 4
