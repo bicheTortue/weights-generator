@@ -3,8 +3,7 @@ import pickle
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import Dense, LSTM, GRU
 from keras.layers import TimeDistributed
 
 
@@ -133,7 +132,7 @@ def saveTofile(layers, filename):
             nbOut = layer.output_shape[-1]
             out[0].append("tDense(" + str(nbOut) + ")")
             out.append(getDenseWeights(layer, nbOut))
-        if type(layer) == Dense:
+        elif type(layer) == Dense:
             nbOut = layer.output_shape[1]
             out[0].append("Dense(" + str(nbOut) + ")")
             out.append(getDenseWeights(layer, nbOut))
@@ -141,6 +140,10 @@ def saveTofile(layers, filename):
             nbHid = layer.units
             out[0].append("LSTM(" + str(nbHid) + ")")
             out.append(getLSTMWeights(layer, nbHid))
+        elif type(layer) == GRU:
+            nbHid = layer.units
+            out[0].append("LSTM(" + str(nbHid) + ")")
+            out.append(getGRUWeights(layer, nbHid))
 
     with open(filename, "wb") as file:  # Pickling
         pickle.dump(out, file)
