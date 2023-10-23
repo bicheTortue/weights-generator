@@ -102,6 +102,20 @@ def getLSTMWeights(lstm, nbHidden):
     return out
 
 
+def getGRUWeights(layer, nbHidden):
+    W, U, b = layer.get_weights()
+    nbGates = 3
+    out = [None] * nbGates
+
+    for i in range(nbGates):
+        out[i] = []
+        for j in range(nbHidden):
+            out[i].extend(W[:, i * nbGates + j])
+            out[i].extend(U[:, i * nbGates + j])
+            out[i].append(b[i * nbGates + j])
+    return out
+
+
 def getDenseWeights(nn, nbOutput):
     W = nn.get_weights()[0]
     b = list(nn.get_weights()[1])
