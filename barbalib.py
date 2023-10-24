@@ -142,7 +142,7 @@ def saveTofile(layers, filename):
             out.append(getLSTMWeights(layer, nbHid))
         elif type(layer) == GRU:
             nbHid = layer.units
-            out[0].append("LSTM(" + str(nbHid) + ")")
+            out[0].append("GRU(" + str(nbHid) + ")")
             out.append(getGRUWeights(layer, nbHid))
 
     with open(filename, "wb") as file:  # Pickling
