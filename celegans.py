@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -121,6 +122,7 @@ def evaluate_results(
     model, opt, trainx, trainy, validx, validy, testx, testy, output_size
 ):
     # Evaluate on training, validation and test data
+
     train_l = model.evaluate(
         np.array(trainx),
         np.array(trainy),
@@ -146,6 +148,7 @@ def evaluate_results(
         use_multiprocessing=True,
     )
 
+    t1 = time()
     trainPredict = model.predict(
         np.array(trainx),
         batch_size=opt.batch_size,
@@ -169,6 +172,8 @@ def evaluate_results(
         workers=12,
         use_multiprocessing=True,
     )
+    t2 = time()
+    print("Took :", t2 - t1, "seconds")
     plot_results(opt, testy, testPredict, "/test", output_size)
 
     return train_l, valid_l, test_l
