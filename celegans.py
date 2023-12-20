@@ -26,7 +26,7 @@ from sklearn.preprocessing import MinMaxScaler
 # import norm
 from tensorflow.keras.constraints import MinMaxNorm
 
-from plot_read import *
+from plotNread import *
 from barbalib import *
 
 
@@ -177,30 +177,6 @@ def evaluate_results(
     plot_results(opt, testy, testPredict, "/test", output_size)
 
     return train_l, valid_l, test_l
-
-
-def plot_results(opt, real, predicted, string, out_size):
-    cols = ["DB1_Predicted", "LUAL_Predicted", "PVR_Predicted", "VB1_Predicted"]
-
-    for i, frame in enumerate(predicted):
-        pos = real[i].shape[1]
-        for j in range(out_size):
-            real[i].insert(loc=pos, column=cols[j], value=frame[:, j])
-            pos = pos + 1
-        real[i].plot(kind="line")
-        Path(opt.savepath + "results_files").mkdir(parents=True, exist_ok=True)
-        real[i].to_csv(
-            opt.savepath + "results_files" + string + str(i) + "_data.dat",
-            sep=" ",
-            header=False,
-        )
-        if opt.plots_out:
-            plt.legend(loc="upper right")
-            Path(opt.savepath + "results_plots").mkdir(parents=True, exist_ok=True)
-            plt.savefig(
-                opt.savepath + "results_plots" + string + str(i) + "_response.svg"
-            )
-            plt.close()
 
 
 def train(opt):
